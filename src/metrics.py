@@ -83,9 +83,10 @@ def get_average_dot_product(dataset):
             count +=1
             sum += average_correlation
     return sum / count
-
+'''
 import pickle
 
 dataset = pickle.load(open('data/ManualHannesDataset.pkl','rb'))
 
 print(get_average_dot_product(dataset))
+'''

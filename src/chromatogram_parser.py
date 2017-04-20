@@ -87,7 +87,7 @@ def get_dataset(peak_range_file, intensities_file):
             dataset[sequence][file_name][charge][ion]['peak_intensities'] = peak_intensities
             dataset[sequence][file_name][charge][ion]['peak_times'] = peak_times
     return dataset
-
+'''
 import random
 import pickle
 dataset = pickle.load(open('data/ManualHannesDataset.pkl','rb'))#get_dataset("data/smoothBoundaries.csv", 'data/smoothCalibration.tsv')
@@ -129,4 +129,4 @@ while(True):
     plt.show(block=False)
     plt.waitforbuttonpress()
     plt.close()
-
+'''
