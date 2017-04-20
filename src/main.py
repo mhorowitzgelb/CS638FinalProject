@@ -7,12 +7,12 @@ import sys
 
 def main(args):
     with open('data/smooth.pkl','rb') as smooth_file:
-        dataset = pickle.load(smooth_file)
+        training_dataset = pickle.load(smooth_file)
 
 
     desired_image_width = 100
     #Gets a training set of {training_set_size}x2x100
-    training_set = get_training_set(dataset,desired_image_width)
+    training_set = get_training_set(training_dataset,desired_image_width)
 
     #number of training exmamples
     num_training_examples = training_set.shape[0]
@@ -23,6 +23,12 @@ def main(args):
     #Should be same as desired_image_width
     image_width = training_set.shape[2]
 
+
+    #Get noisy test set: use this for testing your gans
+
+    with open('data/hannes.pkl','rb') as noisy_file:
+        noisy_dataset = pickle.load(noisy_file)
+    noisy_test_set = get_training_set(noisy_dataset,desired_image_width)
 
     example_one = training_set[0,:,:]
 
