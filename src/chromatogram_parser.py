@@ -48,6 +48,8 @@ def get_dataset(peak_range_file, intensities_file):
                 continue
             file_name = row[0]
             sequence = row[1]
+            if(row[2] == '#N/A'):
+                continue
             start_time = float(row[2])
             end_time = float(row[3])
             if not sequence in dataset:
@@ -73,7 +75,10 @@ def get_dataset(peak_range_file, intensities_file):
             all_times = list(map(float, all_times.split(",")))
             all_intensities = row[9]
             all_intensities = list(map(float,all_intensities.split(',')))
-
+            if not sequence in dataset:
+                continue
+            if not file_name in dataset[sequence]:
+                continue
             (peak_times, peak_intensities) = get_peak_intensities(all_times, all_intensities,
                                                dataset[sequence][file_name]["start_time"], dataset[sequence][file_name]["end_time"])
             if not charge in dataset[sequence][file_name]:
@@ -82,19 +87,45 @@ def get_dataset(peak_range_file, intensities_file):
             dataset[sequence][file_name][charge][ion]['peak_intensities'] = peak_intensities
             dataset[sequence][file_name][charge][ion]['peak_times'] = peak_times
     return dataset
-
+''' 
 import random
-dataset = get_dataset("data\smoothBoundaries.csv",'data\smoothCalibration.tsv')
+import pickle
+dataset = pickle.load(open('data/ManualHannesDataset.pkl','rb'))#get_dataset("data/smoothBoundaries.csv", 'data/smoothCalibration.tsv')
 
-intensities = dataset[random.choice(list(dataset.items()))[0]]
+import pickle
 
-intensities = intensities[random.choice(list(intensities.items()))[0]]
+#pickle.dump(dataset, open('data/smooth.pkl', 'wb'))
 
-intensities = intensities[random.choice(list(intensities.items()))[0]]
-for a in intensities:
-    b = intensities[a]
-    c = b['peak_intensities']
-    times = b['peak_times']
-    plt.plot(times,c)
-plt.show()
+while(True):
 
+    key = random.choice(list(dataset.keys()))
+    intensities = dataset[key]
+    #print(type(intensities))
+
+    key = random.choice(list(intensities.keys()))
+    intensities = intensities[key]
+    #print(type(intensities))
+
+
+    key = random.choice(list(intensities.keys()))
+    while('time' in key):
+        key = random.choice(list(intensities.keys()))
+    intensities = intensities[key]
+
+    #print(type(intensities))
+
+    #print(intensities)
+
+    print("Drawing")
+    for a in intensities.keys():
+        b = intensities[a]
+        c = b['peak_intensities']
+        times_actual = b["peak_times"]
+        times = np.arange(len(c))
+        print('{0} Start: {1} , End: {2}, Points: {3} '.format(a, times_actual[0], times_actual[-1], len(times_actual)))
+        plt.plot(times,c)
+    plt.show(block=False)
+    plt.waitforbuttonpress()
+    plt.close()
+
+'''
