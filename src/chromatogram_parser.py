@@ -90,11 +90,13 @@ def get_dataset(peak_range_file, intensities_file):
 '''
 import random
 import pickle
-dataset = pickle.load(open('data/ManualHannesDataset.pkl','rb'))#get_dataset("data/smoothBoundaries.csv", 'data/smoothCalibration.tsv')
+dataset = get_dataset("data\\ManualHannes.csv", 'data\\ManualHannes.tsv')
 
 import pickle
 
-#pickle.dump(dataset, open('data/smooth.pkl', 'wb'))
+pickle.dump(dataset, open('data\\hannes.pkl', 'wb'))
+
+sys.exit()
 
 sequence = random.choice(list(dataset.keys()))
 
