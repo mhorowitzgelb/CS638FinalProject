@@ -39,3 +39,6 @@ def main(args):
     plt.show(block=False)
     plt.waitforbuttonpress()
     sys.exit()
+
+if __name__ == '__main__':
+    main(None)
