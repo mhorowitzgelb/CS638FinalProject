@@ -1,0 +1,55 @@
+* TODO Normalize inputs between -1 and 1
+* TODO Tanh as last layer of the generator output
+* TODO Generator Loss is max log D + Preceptural Loss + cosine similarity
+* TODO Sample from Gaussian distribution
+* TODO Use batch norm for real and fake instances
+* TODO Use LeakyReLU in both G and D
+* TODO Average Pooling, Conv2d + stride for downsampling
+* TODO Use Label Smoothing.
+* TODO (Optional) keep replay buffer of past generations and occasionally show them
+* TODO Keep checkpoints from the past of G and D and occasionall swap them out for a few iterations.
+* TODO Use ADAM Optimizer for Generator
+* TODO Use SGD for descriminator
+* TODO Make sure D loss isn't 0
+* TODO if norms of gradients are over 100, things are screwed up.
+* TODO add artificial noise to inputs to D
+* TODO Use Dropouts in G in both train and test phase with p=0.5
+* Pretraining
+  1. Predict the single using the average
+     1. grab examples
+     2. add noise
+     3. loss between noisy data and true thing
+  2. smooth single transition
+  3. downssample, add noise, and upsample.
+  4. average is the average over all the other peptides. Provides additional information for predicting the single one
+* TODO to Read
+** DONE Image Deraining 
+   CLOSED: [2017-04-25 Tue 17:47]
+   https://arxiv.org/pdf/1701.05957.pdf
+   Use a symmetric structure, because need to transform into a domain which the real image and the noise can be separated, and then transferred back to original.
+** DONE Perceptual Loss for real time style transfer and super-resolution
+   CLOSED: [2017-04-26 Wed 15:57]
+   https://arxiv.org/pdf/1603.08155.pdf
+** DONE DCGAN Paper
+   CLOSED: [2017-04-26 Wed 15:57]
+   https://arxiv.org/pdf/1511.06434.pdf
+** DONE Conditional Adversarial Generative Nets
+   CLOSED: [2017-04-26 Wed 15:57]
+   https://arxiv.org/pdf/1411.1784.pdf
+   Use class labels / extra information in both the generator and discriminator
+** A noise model for mass spectrometry based proteomics
+   https://academic.oup.com/bioinformatics/article/24/8/1070/213310/A-noise-model-for-mass-spectrometry-based
+** http://kvfrans.com/variational-autoencoders-explained/
+* Generator
+** Input
+*** a set of clean activations.
+** Layers
+*** Symmetric?
+    Used in rain so that they can get 
+* Discriminator
+** Input
+*** a set of activations.
+*** whether they're real or fake
+** Loss
+*** whether or not it was the right prediction.
+
