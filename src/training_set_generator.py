@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 
-from src.metrics import get_area
+from metrics import get_area
 import sys
 import numpy as np
 

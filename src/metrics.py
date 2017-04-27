@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-from src.chromatogram_parser import get_dataset
+from chromatogram_parser import get_dataset
 
 def get_area(intensities):
     sum = 0
