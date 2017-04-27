@@ -37,6 +37,30 @@ def get_training_set(dataset, image_width):
     return np.array(training_images)
 
 
+def do_prediction(image, model):
+    #Placeholder TODO GABE put you tensorflow prediction code here
+    #place holder just adds random noise, obviously should be removed
+    return image[0,:] + np.random.rand(len(image[0,:]))
+
+
+def do_predictions(dataset, model, image_width):
+    for sequence_str, sequence in dataset.items():
+        for file_str, file in sequence.items():
+            for charge_str, charge in file.items():
+                if 'time' in charge_str:
+                    continue
+                intensities_set = []
+                ion_strings = []
+                for ion_str, ion in charge.items():
+                    intensities_set.append(ion['peak_intensities'])
+                    ion_strings.append(ion_str)
+                normalized_set = get_normalized_and_resized(intensities_set,image_width)
+                for idx, image in enumerate(get_training_images_from_intensities_set(normalized_set)):
+                    pred = do_prediction(image, model)
+                    dataset[sequence_str][file_str][charge_str][ion_strings[idx]]['peak_intensities_pred'] = pred
+
+
+
 def get_normalized_and_resized(intensities_set, size):
     intensities_set = np.array(intensities_set)
 
@@ -56,4 +80,12 @@ def get_normalized_and_resized(intensities_set, size):
 
     return np.array(result)
 
+import pickle
+from src.metrics import  get_average_dot_product
 
+if __name__ == '__main__':
+    with open('data/hannes.pkl', 'rb') as noisy_file:
+        dataset = pickle.load(noisy_file)
+    do_predictions(dataset,None,100)
+    (orig_dot, pred_dot)  = get_average_dot_product(dataset)
+    print("Original {0}, Predictions {1}".format(orig_dot, pred_dot))
