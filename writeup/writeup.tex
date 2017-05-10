@@ -4,8 +4,12 @@
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{parskip}
 
-\title{LCMS Chromatogram Smoothing With Generative Adversarial Networks}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+
+\title{LC/MS Chromatogram Smoothing With Generative Adversarial Networks}
 
 \author{Gabriel Ferns(CS Senior) , Max Horowitz-Gelb(CS Senior)}
 
@@ -14,14 +18,20 @@
 \maketitle
 
 \abstract{
-Liquid Chromatography Mass Spectrometry is a powerful tool for identifying and quantifying proteins in a complex sample. High throughput methods of LCMS such as DIA\cite{DIA} allow for analysis of samples with thousands of proteins. But this increase in throughput comes at the cost of a decrease in signal quality. This gives incentive for post extraction methods to clean and smooth chromatogram signal data. Here , using a new and powerful deep learning framework known as GANs \cite{GAN}, we attempt to smooth chromatograms, without distortion of the true underlying quantifiable data. 
+Liquid Chromatography Mass Spectrometry is a powerful tool for identifying and quantifying proteins in a complex sample. High throughput methods of LC/MS such as DIA allow for analysis of samples with thousands of proteins. But this increase in throughput comes at the cost of a decrease in signal quality. This gives incentive for post extraction methods to clean and smooth chromatogram signal data. Here , using a new and powerful deep learning framework known as GANs \cite{GAN}, we attempt to smooth chromatograms, without distortion of the true underlying quantifiable data. 
 \color{red}
 Highlight results here
 \color{black}
 }
 
 \section{Introduction}
-DIA \cite{DIA} is a method of LCMS for quanitifying thousands of proteins. In order to to do analyze thousands of proteins at the same time, DIA methods have one cycling through thousands of different m/z windows, where each window is used to quantify a single peptide. Because we are analyzing so many windows at each time, the dwell time, or time in which signal is extracted, must be very short. Because of this, the quality of the data extracted can be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality to DIA.
+DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins. In order to to do analyze thousands of proteins at the same time, DIA methods have one cycling through thousands of different m/z windows, where each window is used to quantify a single peptide. Because we are analyzing so many windows at each time, the dwell time, or time in which signal is extracted, must be very short. Because of this, the quality of the data extracted can be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality to DIA. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
+
+The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DERAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM data with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
+
+\color{red}
+Include results here
+\color{black}
 
 \begin{figure}
 \centering
@@ -41,8 +51,20 @@ DIA \cite{DIA} is a method of LCMS for quanitifying thousands of proteins. In or
 \label{fig:test}
 \end{figure}
 
+\section{Brief LC/MS Primer}
+LC/MS identifies and quantifies proteins by separating them by their hydrophobicity and mass.
+
 \section{Task Definition}
+The goal of this project is to train a GAN so that it can take as input a peak group and output the same peak group which is smoothed and denoised. A peakgroup is a set of signals arising from a single peptide. This set of signals can be though of as a one dimensional image with a variable number of channels. Each channel represents one transition or peptide fragment. In the field of Mass Spectrometry, peptides are commonly analyzed after first fragmenting the peptide into all of its possible cleavages. 
+
+The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions. It then outputs a smoothed signal of the single transition. To smooth an entire peak group we apply the GAN network to each of the peak group's transitions and compile all the outputs together into a single smoothed peak group. 
+
+\color{red}
+Gabe describe structure of the Gans net. 
+\color{black}
 \section{Algorithm Definition}
+\subsection{Chromatogram Preprocessing}
+Before we can use the chromatogram 
 \section{Methodology}
 \section{Results}
 \section{Discussion}
