@@ -52,12 +52,34 @@ Include results here
 \end{figure}
 
 \section{Brief LC/MS Primer}
-LC/MS identifies and quantifies proteins by separating them by their hydrophobicity and mass.
+LC/MS identifies and quantifies proteins by separating them by their hydrophobicity and mass. In general it is difficult to quantify whole proteins so we instead use peptides which are sub-sequences of a protein. These peptides come off of a liquid column at a specific time which is dependent on the hydrophobicity of the peptide.This time is known as the peptide's Retention Time. Once the peptide comes off the column it is ionized and then becomes what is called a precursor ion. When precursor ions go into the mass spectrometer they are filtered by the ratio of their mass to charge. A precursor ion's mass to charge along with its retention time are used as a two fold filtration process for unique quantification of peptides. 
+
+At this point one could start quantifying the peptide, but in certain methods, like DIA, the precursor is then blasted it with an ion spray. This ion spray causes the precursor to fragment into two pieces. One of these pieces, known as a transition ion, becomes charged and may be detected by the machine. The ratio of expected number of transition ions for each possible fragment that could occur is known via empirical evidence. Because of this the relative ion intensity of each transition ion is useful for identification of the peptide.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{precursor}
+  \caption{Precursor Chromatogram}
+  \label{fig:sub1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{transitions}
+  \caption{Transition Chromatograms(Peak Group)}
+  \label{fig:sub2}
+\end{subfigure}
+\caption{Here we show the difference between precursor and transition ion chromatograms. The precursor chromatogram contains a single peak, while the transition chromatogram shows a set of peaks coming from all the different transitions or fragment ions. This set of transition chromatograms coming from the same peptide is known as a peak group.}
+\label{fig:test}
+\end{figure}
+
 
 \section{Task Definition}
-The goal of this project is to train a GAN so that it can take as input a peak group and output the same peak group which is smoothed and denoised. A peakgroup is a set of signals arising from a single peptide. This set of signals can be though of as a one dimensional image with a variable number of channels. Each channel represents one transition or peptide fragment. In the field of Mass Spectrometry, peptides are commonly analyzed after first fragmenting the peptide into all of its possible cleavages. 
+The goal of this project is to train a GAN so that it can take a peak group and return the same peak group after being smoothed and denoised.  
+The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions coming from the same peak group.  The reason this is done is that as one can see from figure 2, each transition chromatogram has a similar shape to all the other chromatograms in the peak group. So having an average of the other chromatograms is a clue into the true shape of the transition chromatogram we are trying to smooth. 
 
-The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions. It then outputs a smoothed signal of the single transition. To smooth an entire peak group we apply the GAN network to each of the peak group's transitions and compile all the outputs together into a single smoothed peak group. 
+It then outputs a smoothed signal of the single transition. To smooth an entire peak group we apply the GAN network to each of the peak group's transitions and compile all the outputs together into a single smoothed peak group. 
 
 \color{red}
 Gabe describe structure of the Gans net. 
