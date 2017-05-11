@@ -43,12 +43,11 @@ def samplenoise(image_width, num_imgs):
     K = kern.compute_K_symm(xx)
     for i in range(num_imgs):
         noise.append(np.transpose(np.array([nm(image_width, K),
-                                            nm(image_width, K)])))
+                                            np.zeros(image_width)])))
     return noise
 
 
 def main():
-    tf.logging.set_verbosity(tf.logging.INFO)
     with open('/home/gabe/Data/pickled638/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
@@ -56,7 +55,7 @@ def main():
     # Gets a training set of {training_set_size}x2x100
     training_set = get_training_set(training_dataset, desired_image_width)
     training_set = [np.transpose(x) for x in training_set]
-    training_set = training_set
+    training_set = training_set[:100]
 
     # Channels should be 2
     number_of_channels = training_set[0].shape[1]
@@ -95,6 +94,7 @@ def main():
                                       image_width,
                                       number_of_channels])
 
+    just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
     # this means that there will be 0 padding
     padding = "SAME"
 
@@ -140,12 +140,13 @@ def main():
     layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding)
 
     #   layer7
-    layer7 = tf.layers.dense(layer6, units=2, activation=tf.tanh)
+    layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
 
     arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
                       [batch_size * 2, 2])
 
-    disc_input = tf.concat([layer7, gen_input], 0, name="disc_input")
+    print(layer7, just_activation)
+    disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
     disc_output = tf.constant(arst, tf.float32, name="disc_output")
 
     # Discriminator
@@ -177,19 +178,23 @@ def main():
     # Loss
     lb = 10.0
     dloss = tf.losses.softmax_cross_entropy(disc_output, dl6)
-    gloss = tf.losses.mean_squared_error(gen_input, layer7) + lb * tf.log(dloss)
+    dl_print = tf.Print(dloss, [dloss], message="dloss: ")
+
+    gloss = tf.losses.mean_squared_error(just_activation, layer7) + lb * tf.log(dl_print)
+    gl_print = tf.Print(gloss, [gloss], message="gloss: ")
 
     # Optimizers
     goptimizer = tf.train.AdamOptimizer(epsilon=0.01)  # TODO set parameters
     doptimizer = tf.train.GradientDescentOptimizer(0.01)  # TODO set parameters
 
-    gtrain = goptimizer.minimize(gloss)
     dtrain = doptimizer.minimize(dloss)
+    gtrain = goptimizer.minimize(gloss)
 
     num_epochs = 200
     save_loc = "/media/gabe/f74ea3f0-014c-462f-bcc8-f1095e4e5967/Data/gan_model{0}.ckpt"
 
     print("starting")
+    log = "epoch:{0}, error:{1}"
 
     with tf.Session() as sess:
         init = tf.global_variables_initializer()
@@ -200,9 +205,10 @@ def main():
             noise = samplenoise(image_width, batch_size)
             sess.run(dtrain, {gen_input: batch, gen_noise: noise})
             sess.run(gtrain, {gen_input: batch, gen_noise: noise})
+            sess.run(gloss + gloss, {gen_input: batch, gen_noise: noise})
             if i % 100 == 0:
                 print("saving at " + save_loc.format((i // 100) % 10))
                 saver.save(sess, save_loc.format((i // 100) % 10))
-            print(i)
 
-
+if __name__ == "__main__":
+    main()
