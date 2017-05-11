@@ -60,7 +60,7 @@ def main():
     # Gets a training set of {training_set_size}x2x100
     training_set = get_training_set(training_dataset, desired_image_width)
     training_set = [np.transpose(x) for x in training_set]
-    training_set = training_set[:100]
+    # training_set = training_set[:100]
 
     # Channels should be 2
     number_of_channels = training_set[0].shape[1]
@@ -200,7 +200,7 @@ def main():
     doptimizer = tf.train.GradientDescentOptimizer(0.01)  # TODO set parameters
 
     dtrain = doptimizer.minimize(dloss)
-    gtrain = goptimizer.minimize(gloss)
+    gtrain = goptimizer.minimize(gl_print)
 
     num_epochs = 150
     save_loc = "log/gan_model{0}.ckpt"
@@ -227,7 +227,6 @@ def main():
             feed_dict = {gen_input: batch, gen_noise: noise}
             sess.run(dtrain, feed_dict)
             sess.run(gtrain, feed_dict)
-            sess.run(gloss + gloss, feed_dict)
             train_writer.add_graph(sess.graph)
             if (i+1) % 50 == 0:
                 (summary,) = sess.run([merged],feed_dict)
