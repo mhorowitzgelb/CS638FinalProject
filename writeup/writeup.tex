@@ -79,17 +79,41 @@ At this point one could start quantifying the peptide, but in certain methods, l
 The goal of this project is to train a GAN so that it can take a peak group and return the same peak group after being smoothed and denoised.  
 The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions coming from the same peak group.  The reason this is done is that as one can see from figure 2, each transition chromatogram has a similar shape to all the other chromatograms in the peak group. So having an average of the other chromatograms is a clue into the true shape of the transition chromatogram we are trying to smooth. 
 
-It then outputs a smoothed signal of the single transition. To smooth an entire peak group we apply the GAN network to each of the peak group's transitions and compile all the outputs together into a single smoothed peak group. 
+The GAN takes the average chromatogram and the single transition chromatogram as input and then outputs a chromatogram of the single transition after it has been smoothed. 
+
+\begin{figure}
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{input}
+  \caption{Input}
+  \label{fig:sub1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=1\linewidth]{output}
+  \caption{Output}
+  \label{fig:sub2}
+\end{subfigure}
+\caption{Here we show the input and output data for the GAN network. The input composes of unique transition along with an average shape chromatogram coming from all other transitions in the peak group. The output is the smoothed peak group from the transition. (Note the above is not real input or output data as a result of training. It is only for demonstration)}
+\label{fig:test}
+\end{figure}
 
 \color{red}
 Gabe describe structure of the Gans net. 
 \color{black}
 \section{Algorithm Definition}
-\subsection{Chromatogram Preprocessing}
-Before we can use the chromatogram 
+\subsection{Chromatogram Pre-processing}
+Before we can use the chromatogram data it has to be pre-processed. The time span of each peakgroup is not of equal length so all the chromatograms had to be up-sampled or down-sampled so that they were all a standard length of 100 intensity points per peak. As well the intensities were normalized to range from 0 to 1.   
+\subsection{GAN}
+\color{red}
+Gabe explain GANs.
+\color{black}
 \section{Methodology}
 \section{Results}
 \section{Discussion}
+\section{Individual Contributions}
+
 \section{Related Work}
 \section{Future Work}
 \section{Conclusion}
