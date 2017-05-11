@@ -1,235 +1,215 @@
 import pickle
+import random
+import pdb
 import numpy as np
 from training_set_generator import get_training_set
-import matplotlib.pyplot as plt
-import sys
 import tensorflow as tf
+import GPflow as gp
+
+
+def nm(x_width, k):
+    return 0.01*np.random.multivariate_normal(np.zeros(x_width), k)
+
+
+def leaky_relu(z, name=None):
+    return tf.maximum(0.01 * z, z, name=name)
+
+
+def dropout_leaky_relu(x, name=None):
+    return tf.nn.dropout(leaky_relu(x, name), 0.5)
+
+
+def c1dwrap(inputs, num_filters, kernel_size, stride, padding,
+            batch_norm=True):
+    if batch_norm:
+        return tf.layers.batch_normalization(
+            tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
+                             padding, activation=dropout_leaky_relu), axis=2)
+    else:
+        return tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
+                                padding, activation=dropout_leaky_relu)
+
+
+def c1d_transpose_wrap(inputs, num_filters, kernel_size, stride, padding):
+    return tf.layers.batch_normalization(tf.squeeze(tf.layers.conv2d_transpose(
+        tf.expand_dims(inputs, 1), num_filters, kernel_size, (1, stride),
+        padding=padding, activation=dropout_leaky_relu), 1))
+
+
+def samplenoise(image_width, num_imgs):
+    xx = np.arange(image_width)[:, None]
+    kern = gp.kernels.RBF(1)
+    noise = []
+    K = kern.compute_K_symm(xx)
+    for i in range(num_imgs):
+        noise.append(np.transpose(np.array([nm(image_width, K),
+                                            np.zeros(image_width)])))
+    return noise
 
 
 def main():
-    with open('/home/gabe/Data/pickled638/smooth.pkl','rb') as smooth_file:
+    tf.logging.set_verbosity(tf.logging.INFO)
+    with open('data/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
-
     desired_image_width = 100
-    #Gets a training set of {training_set_size}x2x100
-    training_set = get_training_set(training_dataset,desired_image_width)
+    # Gets a training set of {training_set_size}x2x100
+    training_set = get_training_set(training_dataset, desired_image_width)
+    training_set = [np.transpose(x) for x in training_set]
+    training_set = training_set[:100]
 
-    #number of training exmamples
-    num_training_examples = training_set.shape[0]
+    # Channels should be 2
+    number_of_channels = training_set[0].shape[1]
 
-    #Channels should be 2
-    number_of_channels = training_set.shape[1]
+    # Should be same as desired_image_width
+    image_width = training_set[0].shape[0]
 
-    #Should be same as desired_image_width
-    image_width = training_set.shape[2]
-    print(image_width)
+    # example_one = training_set[0, :, :]
+    # plt.clf()
+    # # plt.plot(xx, noise)
+    # plt.plot(np.arange(image_width), example_one)
+    # # plt.plot(np.arange(image_width), example_one[1])
+    # plt.plot(np.arange(image_width), example_one[0] + noise)
+    # plt.plot(np.arange(image_width), example_one[1] + noise)
+    # plt.show()
 
+    # Get noisy test set: use this for testing your gans
 
-    #Get noisy test set: use this for testing your gans
+    # with open('/home/gabe/Data/pickled638/hannes.pkl', 'rb') as noisy_file:
+    #     noisy_dataset = pickle.load(noisy_file)
+    #     noisy_test_set = get_training_set(noisy_dataset, desired_image_width)
 
-    with open('/home/gabe/Data/pickled638/hannes.pkl','rb') as noisy_file:
-        noisy_dataset = pickle.load(noisy_file)
-        noisy_test_set = get_training_set(noisy_dataset,desired_image_width)
+    batch_size = 16
 
-    example_one = training_set[0,:,:]
+    # should be the non-noisy image
+    gen_input = tf.placeholder(tf.float32,
+                               name="gen_input",
+                               shape=[batch_size,
+                                      image_width,
+                                      number_of_channels])
 
-    #plot one unique transition
-    #x is values 0 ... 99 , normalized time values
-    #y is the transitions intensities at each time point
-    plt.plot(np.arange(image_width), example_one[0,:], label='single transition')
+    # the noise
+    gen_noise = tf.placeholder(tf.float32,
+                               name="gen_noise",
+                               shape=[batch_size,
+                                      image_width,
+                                      number_of_channels])
 
-    #Plot average shape over all other transitions of the peptide
-    plt.plot(np.arange(image_width), example_one[1,:], label='shape average')
+    just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
+    # this means that there will be 0 padding
+    padding = "SAME"
 
-    plt.legend()
+    # Generator layers
+    #  convolution section
+    #   layer1
+    num_filters1 = 64
+    kernel_size1 = 8
+    stride1 = 2
+    layer1 = c1dwrap(gen_input + gen_noise, num_filters1, kernel_size1,
+                     stride1, padding)
 
-    plt.show(block=False)
+    #   layer2
+    num_filters2 = 128
+    kernel_size2 = 4
+    stride2 = 2
+    layer2 = c1dwrap(layer1, num_filters2, kernel_size2, stride2, padding)
 
-def real_main():
-    g = GAN(id)
+    #   layer3
+    num_filters3 = 256
+    kernel_size3 = 2
+    stride3 = 1
+    layer3 = c1dwrap(layer2, num_filters3, kernel_size3, stride3, padding)
 
-    num_eps = 1000
-    for i in range(num_eps):
-        # train here
+    #  inv-convolution section
 
-        if i % 20 == 0:
-            g.display_model()
-            g.save_model()
+    #   layer4
+    num_filters4 = 256
+    kernel_size4 = 2
+    stride4 = 1
+    layer4 = c1d_transpose_wrap(layer3, num_filters4, kernel_size4, stride4, padding)
 
-BATCH_SIZE = 128
-LEARNING_RATE = 1e-3
-EPOCHS = 75
-Z_DIM = 100
+    #   layer5
+    num_filters5 = 128
+    kernel_size5 = 4
+    stride5 = 2
+    layer5 = c1d_transpose_wrap(layer4, num_filters5, kernel_size5, stride5, padding)
 
-class GAN(object):
-	def __init__(self, lr=1E-3, batch_size=128, z_dim=100):
-		self.lr = lr
-		self.batch_size = batch_size
-		self.z_dim = z_dim
+    #   layer6
+    num_filters6 = 64
+    kernel_size6 = 8
+    stride6 = 2
+    layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding)
 
-		self.z_in = tf.placeholder(tf.float32, shape=[None, z_dim])
-		self.x_in = tf.placeholder(tf.float32, shape=[None, 784])
+    #   layer7
+    layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
 
-		# Construct Discriminator/ Generator graph ops
-		self.g_sample, self.g_weights = self.generator(z=self.z_in)
-		self.d_real, self.d_weights = self.discriminator(self.x_in)
-		self.d_fake, _ = self.discriminator(self.g_sample, reuse=True)
+    arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
+                      [batch_size * 2, 2])
 
-		# Loss and optimization ops
-		self.d_loss, self.g_loss = self.loss()
-		self.d_train, self.g_train = self.optimize()
+    print(layer7, just_activation)
+    disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
+    disc_output = tf.constant(arst, tf.float32, name="disc_output")
 
-		# Initialize session to run ops in
-		self._sess = tf.Session()
-		self._sess.run(tf.initialize_all_variables())
+    # Discriminator
+    dnf1 = 512
+    dks1 = 8
+    ds1 = 2
+    dl1 = c1dwrap(disc_input, dnf1, dks1, ds1, padding)
 
-	def discriminator(self, x, reuse=False):
-		with tf.variable_scope("D", reuse=reuse):
-			W1_init, _ = he_xavier(784, 128, init_only=True)
-			W1 = tf.get_variable("W1", initializer=W1_init)
-			b1 = tf.get_variable("b1", shape=[128], initializer=tf.constant_initializer(0.0))
-			d_h1 = tf.nn.elu(tf.add(tf.matmul(x, W1), b1))
+    dnf2 = 256
+    dks2 = 4
+    ds2 = 2
+    dl2 = c1dwrap(dl1, dnf2, dks2, ds2, padding)
 
-			W2_init, _ = he_xavier(128, 1, init_only=True)
-			W2 = tf.get_variable("W2", initializer=W2_init)
-			b2 = tf.get_variable("b2", shape=[1], initializer=tf.constant_initializer(0.0))
-			d_h2 = tf.add(tf.matmul(d_h1, W2), b2)
+    dnf3 = 128
+    dks3 = 2
+    ds3 = 1
+    dl3 = c1dwrap(dl2, dnf3, dks3, ds3, padding)
 
-			return tf.nn.sigmoid(d_h2), [W1,b1,W2,b2]
+    dnf4 = 64
+    dks4 = 2
+    ds4 = 1
+    dl4 = c1dwrap(dl3, dnf4, dks4, ds4, padding)
 
-	def generator(self, z):
-		W1, b1 = he_xavier(self.z_dim, 128)
-		g_h1 = tf.nn.elu(tf.add(tf.matmul(z, W1), b1))
+    shpe = dl4.get_shape()[1:]
+    flat = tf.reshape(dl4, [-1, shpe.num_elements()])
+    dl5 = tf.layers.dense(flat, units=256, activation=tf.sigmoid)
+    dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
 
-		W2, b2 = he_xavier(128, 784)
-		g_h2 = tf.add(tf.matmul(g_h1, W2), b2)
+    # Loss
+    lb = 10.0
+    dloss = tf.losses.softmax_cross_entropy(disc_output, dl6)
+    dl_print = tf.Print(dloss, [dloss], message="dloss: ")
 
-		return tf.nn.sigmoid(g_h2), [W1,b1,W2,b2]
+    gloss = tf.losses.mean_squared_error(just_activation, layer7) + lb * tf.log(dl_print)
+    gl_print = tf.Print(gloss, [gloss], message="gloss: ")
 
-	def loss(self):
-		discriminator_loss = -tf.reduce_mean(tf.log(self.d_real) + tf.log(1. - self.d_fake))
-		generator_loss = -tf.reduce_mean(tf.log(self.d_fake))
-		return discriminator_loss, generator_loss
+    # Optimizers
+    goptimizer = tf.train.AdamOptimizer(epsilon=0.01)  # TODO set parameters
+    doptimizer = tf.train.GradientDescentOptimizer(0.01)  # TODO set parameters
 
-	def optimize(self):
-		optimizer = tf.train.AdamOptimizer(learning_rate=self.lr)
-		d_train = optimizer.minimize(self.d_loss, var_list=self.d_weights)
-		g_train = optimizer.minimize(self.g_loss, var_list=self.g_weights)
-		return d_train, g_train
+    dtrain = doptimizer.minimize(dloss)
+    gtrain = goptimizer.minimize(gloss)
 
-	def sample_z(self, num_samples):
-		return np.random.uniform(-1., 1., size=[num_samples, self.z_dim])
+    num_epochs = 100
+    save_loc = "log/gan_model{0}.ckpt"
 
-	def train_discriminator(self, x_in):
-		z_sample = self.sample_z(self.batch_size)
-		fetches = [self.d_train, self.d_loss]
-		_, d_loss = self._sess.run(fetches, feed_dict={self.x_in: x_in, self.z_in:z_sample})
-		return d_loss
+    print("starting")
+    log = "epoch:{0}, error:{1}"
 
-	def train_generator(self):
-		z_sample = self.sample_z(self.batch_size)
-		fetches = [self.g_train, self.g_loss]
-		_, g_loss = self._sess.run(fetches, feed_dict={self.z_in: z_sample})
-		return g_loss
+    with tf.Session() as sess:
+        init = tf.global_variables_initializer()
+        sess.run(init)
+        saver = tf.train.Saver()
+        batch = [random.choice(training_set) for _ in range(batch_size)]
+        for i in range(num_epochs):
+            noise = samplenoise(image_width, batch_size)
+            sess.run(dtrain, {gen_input: batch, gen_noise: noise})
+            sess.run(gtrain, {gen_input: batch, gen_noise: noise})
+            sess.run(gloss + gloss, {gen_input: batch, gen_noise: noise})
+            if i % 100 == 0:
+                print("saving at " + save_loc.format((i // 100) % 10))
+                saver.save(sess, save_loc.format((i // 100) % 10))
 
-	def sample_g(self, num_samples):
-		z_sample = self.sample_z(num_samples=num_samples)
-		return self._sess.run(self.g_sample, feed_dict={self.z_in: z_sample})
-
-def plot_grid(samples):
-    fig = plt.figure(figsize=(4, 4))
-    gs = gridspec.GridSpec(4, 4)
-    gs.update(wspace=0.05, hspace=0.05)
-
-    for i, sample in enumerate(samples):
-        ax = plt.subplot(gs[i])
-        plt.axis('off')
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_aspect('equal')
-        plt.imshow(sample.reshape(28, 28), cmap='Greys_r')
-
-    return fig
-
-def main(_):
-	print_flags(FLAGS)
-	gan = GAN(lr=FLAGS.learning_rate, batch_size=FLAGS.batch_size, z_dim=FLAGS.z_dim)
-	mnist = load_mnist()
-
-	print("Started training {}".format(datetime.now().isoformat()[11:]))
-	plot_index = 0
-	for epoch in range(FLAGS.epochs):
-		for batch in range(mnist.train.num_examples // FLAGS.batch_size):
-			batch_x, _ = mnist.train.next_batch(FLAGS.batch_size)
-			_ = gan.train_discriminator(x_in=batch_x)
-			_ = gan.train_generator()
-
-		if epoch % 10 == 0:
-			d_loss = gan.train_discriminator(x_in=batch_x)
-			g_loss = gan.train_generator()
-			print("Epoch {} Discriminator Loss {} Generator loss {}".format(epoch + 1,
-			                                                                d_loss,
-			                                                                g_loss))
-			gen_sample = gan.sample_g(num_samples=16)
-
-			fig = plot_grid(gen_sample)
-			plt.savefig('{}.png'.format(str(plot_index).zfill(3)), bbox_inches='tight')
-			plot_index += 1
-			plt.close(fig)
-	print("Ended training {}".format(datetime.now().isoformat()[11:]))
-
-FLAGS = None
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser()
-
-	parser.add_argument("--learning_rate", type=int, default=LEARNING_RATE)
-	parser.add_argument("--batch_size", type=int, default=BATCH_SIZE)
-	parser.add_argument("--epochs", type=int, default=EPOCHS)
-	parser.add_argument("--z_dim", type=int, default=Z_DIM)
-	FLAGS, _ = parser.parse_known_args()
-
-	tf.app.run()
-
-def GAN():
-    """
-    noise_model(inputs) = sample from the noise distribution
-    """
-    def __init__(self, noise_model, learning_rate=1E-4, batch_size=16, image_width=100, save_loc="/tmp/gan_model.ckpt"):
-        self.noise_model = noise_model
-        self.learning_rate = learning_rate
-        self.batch_size = batch_size
-        self.image_width = image_width
-
-        #where the images get put
-        self.img_in = tf.placeholder(tf.float32, shape=[batch_size, image_width])
-
-        # g_sample is the output of sampling from g
-        # g_weights is the weights of g
-        self.g_sample, self.g_weights = self.init_generator()
-        self.d_weights = self.init_discriminator()
-        
-
-        self._sess = tf.Session()
-        self._sess.run(tf.initialize_all_variables)
-        self._saver = tf.train.Saver()
-        self.save_loc = save_loc
-
-    def init_generator(self):
-        pass
-
-    def init_discriminator(self):
-        pass
-
-    def train_generator(self, x_in):
-        assert(len(x_in) == self.batch_size)
-        inputs = self.noise_model(x_in)
-
-    def train_discriminator(self, x_in):
-        assert(len(x_in) == self.batch_size)
-
-    def save_model(self):
-        self._saver.save(self._sess, self.save_loc)
-
-    def display_model(self):
-        pass
+    main()

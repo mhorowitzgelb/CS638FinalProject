@@ -1,7 +1,6 @@
 * TODO Normalize inputs between -1 and 1
 * TODO Tanh as last layer of the generator output
 * TODO Generator Loss is max log D + Preceptural Loss + cosine similarity
-* TODO Sample from Gaussian distribution
 * TODO Use batch norm for real and fake instances
 * TODO Use LeakyReLU in both G and D
 * TODO Average Pooling, Conv2d + stride for downsampling
@@ -14,6 +13,12 @@
 * TODO if norms of gradients are over 100, things are screwed up.
 * TODO add artificial noise to inputs to D
 * TODO Use Dropouts in G in both train and test phase with p=0.5
+* stuff to implement
+** Generator architecture
+*** TODO Last layer
+*** TODO 
+** TODO Discriminator loss
+** TODO Generator loss
 * Pretraining
   1. Predict the single using the average
      1. grab examples
@@ -52,4 +57,5 @@
 *** whether they're real or fake
 ** Loss
 *** whether or not it was the right prediction.
-
+* Things to talk about in the paper
+** No pooling layers because the necessary information is local

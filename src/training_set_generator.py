@@ -34,7 +34,7 @@ def get_training_set(dataset, image_width):
                 for image in get_training_images_from_intensities_set(normalized_set):
                     training_images.append(image)
 
-    return np.array(training_images)
+    return training_images
 
 
 def do_prediction(image, model):
@@ -81,7 +81,7 @@ def get_normalized_and_resized(intensities_set, size):
     return np.array(result)
 
 import pickle
-from src.metrics import  get_average_dot_product
+from metrics import  get_average_dot_product
 
 if __name__ == '__main__':
     with open('data/hannes.pkl', 'rb') as noisy_file:
