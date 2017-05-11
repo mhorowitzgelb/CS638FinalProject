@@ -37,13 +37,12 @@ def get_training_set(dataset, image_width):
     return training_images
 
 
-def do_prediction(image, model):
-    #Placeholder TODO GABE put you tensorflow prediction code here
-    #place holder just adds random noise, obviously should be removed
-    return image[0,:] + np.random.rand(len(image[0,:]))
+def do_prediction(image, sess, generator_model):
+    return generator_model.predict(image,sess)
 
 
-def do_predictions(dataset, model, image_width):
+
+def do_predictions(dataset, sess, output, image_width):
     for sequence_str, sequence in dataset.items():
         for file_str, file in sequence.items():
             for charge_str, charge in file.items():
@@ -56,7 +55,7 @@ def do_predictions(dataset, model, image_width):
                     ion_strings.append(ion_str)
                 normalized_set = get_normalized_and_resized(intensities_set,image_width)
                 for idx, image in enumerate(get_training_images_from_intensities_set(normalized_set)):
-                    pred = do_prediction(image, model)
+                    pred = do_prediction(image, sess,output)
                     dataset[sequence_str][file_str][charge_str][ion_strings[idx]]['peak_intensities_pred'] = pred
 
 

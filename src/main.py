@@ -5,6 +5,8 @@ import numpy as np
 from training_set_generator import get_training_set
 import tensorflow as tf
 import GPflow as gp
+import matplotlib.pyplot as plt
+import sys
 
 
 def nm(x_width, k):
@@ -20,20 +22,22 @@ def dropout_leaky_relu(x, name=None):
 
 
 def c1dwrap(inputs, num_filters, kernel_size, stride, padding,
-            batch_norm=True):
-    if batch_norm:
-        return tf.layers.batch_normalization(
-            tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
-                             padding, activation=dropout_leaky_relu), axis=2)
-    else:
-        return tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
-                                padding, activation=dropout_leaky_relu)
+            batch_norm=True, name=""):
+    with tf.name_scope(name) as scope:
+        if batch_norm:
+            return tf.layers.batch_normalization(
+                tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
+                                 padding, activation=dropout_leaky_relu), axis=2)
+        else:
+            return tf.layers.conv1d(inputs, num_filters, kernel_size, stride,
+                                    padding, activation=dropout_leaky_relu)
 
 
-def c1d_transpose_wrap(inputs, num_filters, kernel_size, stride, padding):
-    return tf.layers.batch_normalization(tf.squeeze(tf.layers.conv2d_transpose(
-        tf.expand_dims(inputs, 1), num_filters, kernel_size, (1, stride),
-        padding=padding, activation=dropout_leaky_relu), 1))
+def c1d_transpose_wrap(inputs, num_filters, kernel_size, stride, padding, name= ""):
+    with tf.name_scope(name) as scope:
+        return tf.layers.batch_normalization(tf.squeeze(tf.layers.conv2d_transpose(
+            tf.expand_dims(inputs, 1), num_filters, kernel_size, (1, stride),
+            padding=padding, activation=dropout_leaky_relu), 1))
 
 
 def samplenoise(image_width, num_imgs):
@@ -81,100 +85,107 @@ def main():
 
     batch_size = 16
 
-    # should be the non-noisy image
-    gen_input = tf.placeholder(tf.float32,
-                               name="gen_input",
-                               shape=[batch_size,
-                                      image_width,
-                                      number_of_channels])
+    with tf.name_scope('Generator') as scope:
 
-    # the noise
-    gen_noise = tf.placeholder(tf.float32,
-                               name="gen_noise",
-                               shape=[batch_size,
-                                      image_width,
-                                      number_of_channels])
+        # should be the non-noisy image
+        gen_input = tf.placeholder(tf.float32,
+                                   name="gen_input",
+                                   shape=[batch_size,
+                                          image_width,
+                                          number_of_channels])
 
-    just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
-    # this means that there will be 0 padding
-    padding = "SAME"
+        # the noise
+        gen_noise = tf.placeholder(tf.float32,
+                                   name="gen_noise",
+                                   shape=[batch_size,
+                                          image_width,
+                                          number_of_channels])
 
-    # Generator layers
-    #  convolution section
-    #   layer1
-    num_filters1 = 64
-    kernel_size1 = 8
-    stride1 = 2
-    layer1 = c1dwrap(gen_input + gen_noise, num_filters1, kernel_size1,
-                     stride1, padding)
+        just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
+        # this means that there will be 0 padding
+        padding = "SAME"
 
-    #   layer2
-    num_filters2 = 128
-    kernel_size2 = 4
-    stride2 = 2
-    layer2 = c1dwrap(layer1, num_filters2, kernel_size2, stride2, padding)
+        # Generator layers
+        #  convolution section
+        #   layer1
+        num_filters1 = 64
+        kernel_size1 = 8
+        stride1 = 2
 
-    #   layer3
-    num_filters3 = 256
-    kernel_size3 = 2
-    stride3 = 1
-    layer3 = c1dwrap(layer2, num_filters3, kernel_size3, stride3, padding)
+        layer1 = c1dwrap(gen_input + gen_noise, num_filters1, kernel_size1,
+                         stride1, padding, name="Conv1")
 
-    #  inv-convolution section
+        #   layer2
+        num_filters2 = 128
+        kernel_size2 = 4
+        stride2 = 2
+        layer2 = c1dwrap(layer1, num_filters2, kernel_size2, stride2, padding, name="Conv2")
 
-    #   layer4
-    num_filters4 = 256
-    kernel_size4 = 2
-    stride4 = 1
-    layer4 = c1d_transpose_wrap(layer3, num_filters4, kernel_size4, stride4, padding)
+        #   layer3
+        num_filters3 = 256
+        kernel_size3 = 2
+        stride3 = 1
+        layer3 = c1dwrap(layer2, num_filters3, kernel_size3, stride3, padding, name="Conv3")
 
-    #   layer5
-    num_filters5 = 128
-    kernel_size5 = 4
-    stride5 = 2
-    layer5 = c1d_transpose_wrap(layer4, num_filters5, kernel_size5, stride5, padding)
+        #  inv-convolution section
 
-    #   layer6
-    num_filters6 = 64
-    kernel_size6 = 8
-    stride6 = 2
-    layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding)
+        #   layer4
+        num_filters4 = 256
+        kernel_size4 = 2
+        stride4 = 1
+        layer4 = c1d_transpose_wrap(layer3, num_filters4, kernel_size4, stride4, padding, name="DeConv1")
 
-    #   layer7
-    layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
+        #   layer5
+        num_filters5 = 128
+        kernel_size5 = 4
+        stride5 = 2
+        layer5 = c1d_transpose_wrap(layer4, num_filters5, kernel_size5, stride5, padding, name="DeConv2")
 
-    arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
-                      [batch_size * 2, 2])
+        #   layer6
+        num_filters6 = 64
+        kernel_size6 = 8
+        stride6 = 2
+        layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding, name="DeConv3")
 
-    print(layer7, just_activation)
-    disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
-    disc_output = tf.constant(arst, tf.float32, name="disc_output")
+        #   layer7
+        layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
 
-    # Discriminator
-    dnf1 = 512
-    dks1 = 8
-    ds1 = 2
-    dl1 = c1dwrap(disc_input, dnf1, dks1, ds1, padding)
+        arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
+                          [batch_size * 2, 2])
 
-    dnf2 = 256
-    dks2 = 4
-    ds2 = 2
-    dl2 = c1dwrap(dl1, dnf2, dks2, ds2, padding)
 
-    dnf3 = 128
-    dks3 = 2
-    ds3 = 1
-    dl3 = c1dwrap(dl2, dnf3, dks3, ds3, padding)
 
-    dnf4 = 64
-    dks4 = 2
-    ds4 = 1
-    dl4 = c1dwrap(dl3, dnf4, dks4, ds4, padding)
+        print(layer7, just_activation)
 
-    shpe = dl4.get_shape()[1:]
-    flat = tf.reshape(dl4, [-1, shpe.num_elements()])
-    dl5 = tf.layers.dense(flat, units=256, activation=tf.sigmoid)
-    dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
+    with tf.name_scope("Discriminator") as scope:
+        disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
+        disc_output = tf.constant(arst, tf.float32, name="disc_output")
+
+        # Discriminator
+        dnf1 = 512
+        dks1 = 8
+        ds1 = 2
+        dl1 = c1dwrap(disc_input, dnf1, dks1, ds1, padding, name="Conv1")
+
+        dnf2 = 256
+        dks2 = 4
+        ds2 = 2
+        dl2 = c1dwrap(dl1, dnf2, dks2, ds2, padding, name="Conv2")
+
+        dnf3 = 128
+        dks3 = 2
+        ds3 = 1
+        dl3 = c1dwrap(dl2, dnf3, dks3, ds3, padding, name="Conv3")
+
+        dnf4 = 64
+        dks4 = 2
+        ds4 = 1
+        dl4 = c1dwrap(dl3, dnf4, dks4, ds4, padding, name="Conv4")
+
+        shpe = dl4.get_shape()[1:]
+        flat = tf.reshape(dl4, [-1, shpe.num_elements()])
+        dl5 = tf.layers.dense(flat, units=256, activation=tf.sigmoid)
+        dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
 
     # Loss
     lb = 10.0
@@ -191,25 +202,62 @@ def main():
     dtrain = doptimizer.minimize(dloss)
     gtrain = goptimizer.minimize(gloss)
 
-    num_epochs = 100
+    num_epochs = 150
     save_loc = "log/gan_model{0}.ckpt"
 
     print("starting")
     log = "epoch:{0}, error:{1}"
 
+    tf.summary.scalar("Generator Loss", gloss)
+    tf.summary.scalar("Discriminator Loss", dloss)
+
     with tf.Session() as sess:
+        merged = tf.summary.merge_all()
+        train_writer = tf.summary.FileWriter('log',
+                                             sess.graph)
+
         init = tf.global_variables_initializer()
         sess.run(init)
         saver = tf.train.Saver()
         batch = [random.choice(training_set) for _ in range(batch_size)]
+
+
         for i in range(num_epochs):
             noise = samplenoise(image_width, batch_size)
-            sess.run(dtrain, {gen_input: batch, gen_noise: noise})
-            sess.run(gtrain, {gen_input: batch, gen_noise: noise})
-            sess.run(gloss + gloss, {gen_input: batch, gen_noise: noise})
-            if i % 100 == 0:
+            feed_dict = {gen_input: batch, gen_noise: noise}
+            sess.run(dtrain, feed_dict)
+            sess.run(gtrain, feed_dict)
+            sess.run(gloss + gloss, feed_dict)
+            train_writer.add_graph(sess.graph)
+            if (i+1) % 50 == 0:
+                (summary,) = sess.run([merged],feed_dict)
+                train_writer.add_summary(summary,i)
                 print("saving at " + save_loc.format((i // 100) % 10))
                 saver.save(sess, save_loc.format((i // 100) % 10))
+            if i == num_epochs -1:
+                #Get predictions
+                predictions = layer7.eval(feed_dict={gen_input: batch, gen_noise: noise},session=sess)
+        train_writer.flush()
+        #plot first example
+        original = batch[0][:,0]
+        pred = predictions[0][:,0]
+        t= np.arange(100)
+
+        plt.plot(t,original)
+        plt.show()
+        plt.plot(t,pred)
+        plt.show()
+
+class generator_model:
+    def __init__(self, output, input, noise):
+        self.output = output
+        self.input = input
+        self.noise = noise
+
+    def predict(self, image, sess):
+        eval(feed_dict={self.input: image, self.noise: np.zeros(100,2)}, session=sess)
+
+
 
 if __name__ == "__main__":
     main()
