@@ -48,6 +48,7 @@ def samplenoise(image_width, num_imgs):
 
 
 def main():
+    tf.logging.set_verbosity(tf.logging.INFO)
     with open('/home/gabe/Data/pickled638/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
@@ -140,7 +141,6 @@ def main():
 
     #   layer7
     layer7 = tf.layers.dense(layer6, units=2, activation=tf.tanh)
-    print(layer7)
 
     arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
                       [batch_size * 2, 2])
@@ -201,7 +201,7 @@ def main():
             sess.run(dtrain, {gen_input: batch, gen_noise: noise})
             sess.run(gtrain, {gen_input: batch, gen_noise: noise})
             if i % 100 == 0:
-                print("saving at " + save_loc.format((i // 100)) % 10)
+                print("saving at " + save_loc.format((i // 100) % 10))
                 saver.save(sess, save_loc.format((i // 100) % 10))
             print(i)
 
