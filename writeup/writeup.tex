@@ -18,16 +18,16 @@
 \maketitle
 
 \abstract{
-Liquid Chromatography Mass Spectrometry is a powerful tool for identifying and quantifying proteins in a complex sample. High throughput methods of LC/MS such as DIA allow for analysis of samples with thousands of proteins. But this increase in throughput comes at the cost of a decrease in signal quality. This gives incentive for post extraction methods to clean and smooth chromatogram signal data. Here , using a new and powerful deep learning framework known as GANs \cite{GAN}, we attempt to smooth chromatograms, without distortion of the true underlying quantifiable data. 
+Liquid Chromatography Mass Spectrometry is a powerful tool for identifying and quantifying proteins in a complex sample. High throughput methods for LC/MS allow allow for analysis of samples with thousands of proteins. But this increase in throughput comes at the cost of a decrease in signal quality. This issue calls  for post extraction methods to clean and smooth chromatogram signal data. Here , using a new and powerful deep learning framework known as GANs \cite{GAN}, we attempt to smooth chromatograms, without distortion of the true underlying quantifiable data. 
 \color{red}
 Highlight results here
 \color{black}
 }
 
 \section{Introduction}
-DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins. In order to to do analyze thousands of proteins at the same time, DIA methods have one cycling through thousands of different m/z windows, where each window is used to quantify a single peptide. Because we are analyzing so many windows at each time, the dwell time, or time in which signal is extracted, must be very short. Because of this, the quality of the data extracted can be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality to DIA. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
+DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins. In order to analyze thousands of proteins at the same time, DIA methods require a low sample rate. This results in the quality of the data extracted to be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality to DIA. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
 
-The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DERAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM data with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
+The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DE_RAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM data with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
 
 \color{red}
 Include results here
@@ -110,7 +110,7 @@ Before we can use the chromatogram data it has to be pre-processed. The time spa
 Gabe explain GANs.
 \color{black}
 \section{Methodology}
-For training we used a high qualitiy SRM dataset\cite{smooth_Data} containing approximately 12,000 unique transition chromatograms. For our testing, we used DIA dataset \cite{TRIC} of 16 samples each containing 500 peakgroups.
+For training we used a high qualitiy SRM dataset\cite{Smooth_data} containing approximately 12,000 unique transition chromatograms. For our testing, we used DIA dataset \cite{TRIC} of 16 samples each containing 500 peakgroups.
 
 For the test data, we only had the noisy raw DIA data. We don't know what the true shape of the peaks should look like once the noise was removed. For a single peak group the only way to know if we correctly smoothed the data without distorting it would be if we knew beforehand the true amount of protein that existed in each sample. Unfortunately we did not know that for the sample we were using. 
 
@@ -122,8 +122,25 @@ If after doing smoothing from GANS we see this score go significantly down from 
 \section{Results}
 \section{Discussion}
 \section{Individual Contributions}
+\subsection{Max Horowitz-Gelb}
+\begin{itemize}
+\item Extracted data using Skyline \cite{Skyline} proteomics software. 
+\item Formatted and ordered raw data
+\item Preprocessed chromatogram data using NumPy \cite{numpy}.
+\item Visualized Computational Graphs using TensorFlow \cite{TensorFlow}
+\item Created dot product evaluation code using NumPy.
+\item Generated loss summary graphs using Tensor Flow
+\end{itemize}
+
+\subsection{Gabriel Ferns}
+\begin{itemize}
+\item Created GANs net in TensorFlow
+\item Tuned training parameters
+\end{itemize}
+
 
 \section{Related Work}
+Work has been done in the past to smooth chromatograms, but as far as we know, never with a neural network. \cite{Smooth_data} used standard statistical and signal processing methods to smooth and give better quantification of peak areas in SRM data. \cite{gaussian_mixture} removed noise as well as overlapping peaks using a gaussian mixture model. Another model \cite{ASCENT} smoothed peaks by fitting them to a complicated piecewise function.
 \section{Future Work}
 \section{Conclusion}
 

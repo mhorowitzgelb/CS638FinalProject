@@ -39,12 +39,22 @@ def get_training_set(dataset, image_width):
 
 def do_prediction(image, sess, generator_model):
     return generator_model.predict(image,sess)
+    #return np.random.rand(100)
 
+total_sequences_predicted_for = 100
 
-
-def do_predictions(dataset, sess, output, image_width):
+def do_predictions(dataset, sess, model, image_width):
+    i = 0
     for sequence_str, sequence in dataset.items():
+        i += 1
+        if i > total_sequences_predicted_for:
+            break
+        else:
+            dataset[sequence_str]["predicted"] = True
+
         for file_str, file in sequence.items():
+            if(file_str is "predicted"):
+                continue
             for charge_str, charge in file.items():
                 if 'time' in charge_str:
                     continue
@@ -55,7 +65,7 @@ def do_predictions(dataset, sess, output, image_width):
                     ion_strings.append(ion_str)
                 normalized_set = get_normalized_and_resized(intensities_set,image_width)
                 for idx, image in enumerate(get_training_images_from_intensities_set(normalized_set)):
-                    pred = do_prediction(image, sess,output)
+                    pred = do_prediction(image, sess,model)
                     dataset[sequence_str][file_str][charge_str][ion_strings[idx]]['peak_intensities_pred'] = pred
 
 
