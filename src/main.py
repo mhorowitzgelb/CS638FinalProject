@@ -2,7 +2,8 @@ import pickle
 import random
 import pdb
 import numpy as np
-from training_set_generator import get_training_set
+from training_set_generator import get_training_set, do_predictions
+from metrics import get_average_dot_product
 import tensorflow as tf
 import GPflow as gp
 import matplotlib.pyplot as plt
@@ -55,6 +56,11 @@ def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     with open('data/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
+
+    with open('data/ManualHannesDataset.pkl','rb') as noisy_file:
+        testing_dataset = pickle.load(noisy_file)
+
+
 
     desired_image_width = 100
     # Gets a training set of {training_set_size}x2x100
@@ -202,7 +208,7 @@ def main():
     dtrain = doptimizer.minimize(dloss)
     gtrain = goptimizer.minimize(gloss)
 
-    num_epochs = 150
+    num_epochs = 1
     save_loc = "log/gan_model{0}.ckpt"
 
     print("starting")
@@ -237,6 +243,14 @@ def main():
             if i == num_epochs -1:
                 #Get predictions
                 predictions = layer7.eval(feed_dict={gen_input: batch, gen_noise: noise},session=sess)
+
+        #model = generator_model(layer7,gen_input,gen_noise)
+
+        #do_predictions(testing_dataset,sess,model,image_width)
+
+        #print("Average dot products")
+        #print(get_average_dot_product(testing_dataset))
+
         train_writer.flush()
         #plot first example
         original = batch[0][:,0]
@@ -255,7 +269,11 @@ class generator_model:
         self.noise = noise
 
     def predict(self, image, sess):
-        eval(feed_dict={self.input: image, self.noise: np.zeros(100,2)}, session=sess)
+        image = np.transpose(image)
+        input_arr = np.zeros((16,100,2))
+        noise_arr = np.zeros((16,100,2))
+        input_arr[0,:,:] = image
+        return self.output.eval(feed_dict={(self.input): input_arr, (self.noise): (noise_arr)}, session=sess)[0,:,0]
 
 
 

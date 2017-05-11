@@ -56,10 +56,14 @@ def get_average_dot_product(dataset):
     sum_orig = 0.0
     sum_pred = 0.0
     for sequence_str in dataset.keys():
+        if not "predicted" in dataset[sequence_str]:
+            continue
         sequence = dataset[sequence_str]
         charge_areas_orig = {}
         charge_areas_pred = {}
         for file_str in sequence.keys():
+            if (file_str is "predicted"):
+                continue
             file = sequence[file_str]
             for charge_str in file.keys():
                 if 'time' in charge_str:
