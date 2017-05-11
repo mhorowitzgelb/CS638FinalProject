@@ -49,7 +49,7 @@ def samplenoise(image_width, num_imgs):
 
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
-    with open('/home/gabe/Data/pickled638/smooth.pkl', 'rb') as smooth_file:
+    with open('data/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
     desired_image_width = 100
@@ -186,8 +186,8 @@ def main():
     gtrain = goptimizer.minimize(gloss)
     dtrain = doptimizer.minimize(dloss)
 
-    num_epochs = 200
-    save_loc = "/media/gabe/f74ea3f0-014c-462f-bcc8-f1095e4e5967/Data/gan_model{0}.ckpt"
+    num_epochs = 100
+    save_loc = "log/gan_model{0}.ckpt"
 
     print("starting")
 
@@ -206,3 +206,5 @@ def main():
             print(i)
 
 
+if __name__ == "__main__":
+    main()
