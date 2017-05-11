@@ -37,7 +37,7 @@ Include results here
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{SRM_example}
+  \includegraphics[width=1\linewidth]{smoothExample.png}
   \caption{SRM Chromatogram}
   \label{fig:sub1}
 \end{subfigure}%
@@ -85,13 +85,13 @@ The GAN takes the average chromatogram and the single transition chromatogram as
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{input}
+  %\includegraphics[width=1\linewidth]{input}
   \caption{Input}
   \label{fig:sub1}
 \end{subfigure}%
 \begin{subfigure}{.5\textwidth}
   \centering
-  \includegraphics[width=1\linewidth]{output}
+  %\includegraphics[width=1\linewidth]{output}
   \caption{Output}
   \label{fig:sub2}
 \end{subfigure}
@@ -110,6 +110,15 @@ Before we can use the chromatogram data it has to be pre-processed. The time spa
 Gabe explain GANs.
 \color{black}
 \section{Methodology}
+For training we used a high qualitiy SRM dataset\cite{smooth_Data} containing approximately 12,000 unique transition chromatograms. For our testing, we used DIA dataset \cite{TRIC} of 16 samples each containing 500 peakgroups.
+
+For the test data, we only had the noisy raw DIA data. We don't know what the true shape of the peaks should look like once the noise was removed. For a single peak group the only way to know if we correctly smoothed the data without distorting it would be if we knew beforehand the true amount of protein that existed in each sample. Unfortunately we did not know that for the sample we were using. 
+
+So instead we used relative ion intensity to measure the quality of our data. As mentioned earlier in the primer, the relative intensity of each fragment ion has a fairly stable value which we can use for identification. In the test set we have 16 different samples all containing the same peptides. If after smoothing the test data we found that the relative ion intensties for the same peptide across samples didn't match, then we would know that we had corrupted the data. 
+
+To calculate this metric we simply integrate over the curve of each ion's chromatogram in the same peak group. Combing these integrations gives a vector of chromatogram areas for each peptide in each sample. Then with these vectors we simply calculate the average cosine angle between all different samples for the same peptide. This average is our score, where 1 is the best and -1 is the worst.
+
+If after doing smoothing from GANS we see this score go significantly down from before smoothing, then we know that we are corrupting the data. But if it is close to 1, then we can feel confident that the GAN is smoothing the data correctly. 
 \section{Results}
 \section{Discussion}
 \section{Individual Contributions}
