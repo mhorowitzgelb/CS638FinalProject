@@ -58,22 +58,42 @@
 ** Loss
 *** whether or not it was the right prediction.
 * Things to talk about in the paper
-** TODO Architecture decisions
-*** TODO Used the advice given in the NIPS tutorial
-*** TODO Neither the discriminator nor the generator has any pooling type layer
-*** TODO Hyper parameter optimization was a problem, wanted to investigate alternet parameters but coudln't
-*** TODO Used batch normalization.
-*** TODO Wanted to use a perceptual loss function, but no supervised information for this data.
-** TODO Discriminator Architecture
-*** TODO a batch with 1/2 real (no noise) and 1/2 fake (from generator)
-*** TODO SGD was used to optimize, with a learning rate of 0.01
-** TODO Generator Architecture
-*** TODO noisy original was given as the inputs
-*** TODO ADAM with epsilon = 0.01 was used.
-*** TODO No pooling layers because the necessary information is local
-*** TODO The goal was to force the network to by having fewer parameters in the middle
-**** TODO Similar to an autoencoder
-**** TODO Idea inspired by *rain paper*
+** DONE Architecture decisions
+   CLOSED: [2017-05-11 Thu 23:16]
+*** DONE Used the advice given in the NIPS tutorial
+    CLOSED: [2017-05-11 Thu 22:49]
+*** DONE Neither the discriminator nor the generator has any pooling type layer
+    CLOSED: [2017-05-11 Thu 22:49]
+*** DONE Used batch normalization.
+    CLOSED: [2017-05-11 Thu 23:15]
+** DONE Noise Model
+   CLOSED: [2017-05-11 Thu 23:14]
+** DONE Discriminator Architecture
+   CLOSED: [2017-05-11 Thu 23:14]
+*** DONE a batch with 1/2 real (no noise) and 1/2 fake (from generator)
+    CLOSED: [2017-05-11 Thu 23:14]
+*** DONE SGD was used to optimize, with a learning rate of 0.01
+    CLOSED: [2017-05-11 Thu 23:14]
+** DONE Generator Architecture
+   CLOSED: [2017-05-11 Thu 23:12]
+*** DONE Dropout
+    CLOSED: [2017-05-11 Thu 23:12]
+*** DONE noisy original was given as the inputs
+    CLOSED: [2017-05-11 Thu 23:12]
+*** DONE ADAM with epsilon = 0.01 was used.
+    CLOSED: [2017-05-11 Thu 23:12]
+*** DONE No pooling layers because the necessary information is local
+    CLOSED: [2017-05-11 Thu 23:12]
+*** DONE The goal was to force the network to by having fewer parameters in the middle
+    CLOSED: [2017-05-11 Thu 23:12]
+**** DONE Similar to an autoencoder
+     CLOSED: [2017-05-11 Thu 23:12]
+**** DONE Idea inspired by *rain paper*
+     CLOSED: [2017-05-11 Thu 23:12]
 ** TODO Results discussion
+*** DONE Wanted to use a perceptual loss function, but no supervised information for this data.
+    CLOSED: [2017-05-11 Thu 23:27]
+*** DONE Only took 3000 epochs to get decent results, probably because of lack of ReLUs and pooling layers
+    CLOSED: [2017-05-11 Thu 23:27]
 *** TODO Unclear whether the adversarial component made that much difference
-*** TODO Really needed a perceptual loss function to get the same level of success
+*** TODO Problems in the final thing looked to be caused by the noise model

@@ -93,15 +93,7 @@ The GAN takes the average chromatogram and the single transition chromatogram as
 \caption{Here we show the input and output data for the GAN network. The input composes of unique transition along with an average shape chromatogram coming from all other transitions in the peak group. The output is the smoothed peak group from the transition. (Note the above is not real input or output data as a result of training. It is only for demonstration)}
 \label{fig:test}
 \end{figure}
-\begin{figure}
-\includegraphics[scale=0.5]{TopoGenerator}
-\caption{Generator Structure}
-\end{figure}
 
-\begin{figure}
-\includegraphics[scale=0.5]{TopoDiscriminator}
-\caption{Discriminator Structure}
-\end{figure}
 
 \color{black}
 
@@ -109,9 +101,59 @@ The GAN takes the average chromatogram and the single transition chromatogram as
 \subsection{Chromatogram Pre-processing}
 Before we can use the chromatogram data it has to be pre-processed. The time span of each peakgroup was not of equal length so all the chromatograms had to be up-sampled or down-sampled so that they were all a standard length of 100 intensity points per peak. As well the intensities were normalized to range from 0 to 1.   
 \subsection{GAN}
-\color{red}
-Gabe explain GANs.
-\color{black}
+With this processed data, we trained a 1-Dimensional, denoising GAN. Because the
+data is effectively a 1-Dimension Image, we chose to adapt a popular
+Convolutional GAN architecture that has been successfully applied to images, known as DCGAN.
+
+\subsection{Noise Model}
+In order to remove the effect of the noise on the activation, we need to be able to
+generate examples of this noise. The best noise model would be the actual,
+underlying physical process. We do not have access to this, however, so we
+defined a noise model that is a Gaussian Process with an RBF Kernel with
+dimension 1. The advantage of our approach over just assuming some generative
+model for the peptide activation is that a noise model will potentially be
+much simpler because it depends on the data collection apparatus and not the
+structure of the peptide.
+
+\subsection{Architecture Decisions}
+In general, we used the architecture advice present in \cite{GAN}, with several
+alterations to fit our specific problem domain. Neither the discriminator, nor
+the generator has any type of pooling layer because the operation we want is
+smoothing, and there should be no ``nonlocal-information'' that would
+necessitate summary statistics from a pooling layer. Also, pooling layers have
+been shown to hurt convergence \cite{GAN}. Batch normalization was used in both
+the Generator and the Discriminator, as were LeakyReLUs.
+
+\subsection{Generator Architecture}
+\begin{center}
+\begin{figure}
+\includegraphics[scale=0.5]{TopoGenerator}
+\caption{Generator Structure}
+\end{figure}
+\end{center}
+The Noise Model is sampled and added to a real example, and then fed into the
+generator. The Generator will then attempt to reconstruct the original image,
+minus the noise. The loss function on the generator is the squared difference
+between the denoised output image and the original image, and the standard
+$log(D)$, where $D$ is the Discriminator's loss.
+Gradient Descent was achieved using the ADAM optimizer with $\epsilon=0.01$. The
+number of parameters in the Generator decreases near the center of the network,
+in order to force it to generalize. We used dropout with $p=0.5$ in both the
+training and testing of the Generator.
+
+\subsection{Discriminator Architecture}
+\begin{center}
+\begin{figure}
+\includegraphics[scale=0.5]{TopoDiscriminator}
+\caption{Discriminator Structure}
+\end{figure}
+\end{center}
+The inputs to the Discriminator are either images that come from the
+generator, or the real noiseless images, and it is the job of the Discriminator
+to distinguish between the two. Stochastic Gradient Descent with a learning rate
+of $\eta = 0.01$ was used to optimize the weights of the network.
+
+
 \section{Methodology}
 For training we used a high qualitiy SRM dataset\cite{Smooth_data} containing approximately 12,000 unique transition chromatograms. For our testing, we used DIA dataset \cite{TRIC} of 16 samples each containing 500 peakgroups.
 
@@ -123,10 +165,34 @@ To calculate this metric we simply integrate over the curve of each ion's chroma
 
 If after doing smoothing from GANS we see this score go significantly down from before smoothing, then we know that we are corrupting the data. But if it is close to 1, then we can feel confident that the GAN is smoothing the data correctly. 
 \section{Results}
+
 In the test set we achieved images that appeared to somewhat look like the original input. The data was also not corrupted. Both the original DIA data and the predicted data got approximately the same dot product scores of $\sim 0.98$. 
 
+\section{Test Predictions}
+\includegraphics[scale=0.5]{example1}
+\includegraphics[scale=0.5]{example2}
+\includegraphics[scale=0.5]{example3}
+\includegraphics[scale=0.5]{example4}
+\includegraphics[scale=0.5]{example5}
+\includegraphics[scale=0.5]{example6}
 
 \section{Discussion}
+In previous efforts, groups have used what's known as a ``Perceptural Loss
+Function'' to help the Generator Generate images that ``look like'' the original
+image. This is done by minimizing the distance between the Generator's output
+and the high-level features derived by a state-of-the-art supervised image
+classification network. We wanted to do something similar, but lacked
+classification data on the activations. The lack of this part of the loss
+function shows. While the outputs come close to the original in Euclidian
+distance, they somehow don't look like the originals.
+
+The convergence on the GAN was relatively speedy. We attribute this to the lack
+of ReLUs and sparse operations such as pooling.
+
+The impact of the noise model can also be seen in the output. The generated
+activations look like the original with some sort of Gaussian noise removed,
+which is exactly what we were trying to get the networks to do.
+
 \section{Individual Contributions}
 \subsection{Max Horowitz-Gelb}
 \begin{itemize}
@@ -148,15 +214,22 @@ In the test set we achieved images that appeared to somewhat look like the origi
 \section{Related Work}
 Work has been done in the past to smooth chromatograms, but as far as we know, never with a neural network. \cite{Smooth_data} used standard statistical and signal processing methods to smooth and give better quantification of peak areas in SRM data. \cite{gaussian_mixture} removed noise as well as overlapping peaks using a gaussian mixture model. Another model \cite{ASCENT} smoothed peaks by fitting them to a complicated piecewise function.
 \section{Future Work}
+The single biggest improvement that could be made here is a better noise model.
+There have been fairly successful efforts to quantify the biases of a particular
+machine in the past, but because of the novelty of the data collection
+technique, we did not have access to something similar.
+
+
+More time could have been also spent tuning the hyper-parameters and running
+more epochs of the network. Converging to something decent in 3000 epochs is somewhat
+impressive.
+
+Finally, it is unclear whether or not the Adversarial part of the Generator's
+loss function actually made it better at its job. Without the adversarial
+component, the generator is effectively an autoencoder, which could have
+produced the results we see. More investigation is needed.
 \section{Conclusion}
 As we've shown, our GAN is able to somewhat understand the distribution of peak shapes. Though it was not able to smooth the input data it produced outputs from compressed information that somewhat resemble the shape of the input without distorting the quantifiable information. One of the main issues is that we did not have a noise model that was based in the physics of mass spectrometry. We just used a simple Gaussian process noise model. But the fact that we were able to somewhat recreate the original input is a good sign though. It suggests that the GAN network was able to somewhat do feature extraction and learned a generative model for all peaks. This could not only be useful for peak smoothing but also peak detection. The features learned in this model could be applied to a predictive task where we need to select out peaks from a long potentially hour long chromatogram. Though our model is not yet useable for peak smoothing on real data, it seems promising and with more work it could be a powerful tool for peak smoothing and potentially many other computational tasks involved in the field of mass spectrometry.
-\section{Test Predictions}
-\includegraphics[scale=0.5]{example1}
-\includegraphics[scale=0.5]{example2}
-\includegraphics[scale=0.5]{example3}
-\includegraphics[scale=0.5]{example4}
-\includegraphics[scale=0.5]{example5}
-\includegraphics[scale=0.5]{example6}
 
 \bibliography{writeup}{}
 \bibliographystyle{plain}
