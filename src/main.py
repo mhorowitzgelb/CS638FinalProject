@@ -265,8 +265,8 @@ def main():
             plt.plot(t, original, label="Original")
             plt.plot(t, onenoise + original, label="Noisy")
             plt.plot(t, pred, label="Predicted")
-            plt.savefig("log/result{0}.png".format(start + i))
             plt.legend()
+            plt.savefig("log/result{0}.png".format(start + i))
             plt.show()
 
 class generator_model:
