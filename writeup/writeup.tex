@@ -19,19 +19,14 @@
 
 \abstract{
 Liquid Chromatography Mass Spectrometry is a powerful tool for identifying and quantifying proteins in a complex sample. High throughput methods for LC/MS allow allow for analysis of samples with thousands of proteins. But this increase in throughput comes at the cost of a decrease in signal quality. This issue calls  for post extraction methods to clean and smooth chromatogram signal data. Here , using a new and powerful deep learning framework known as GANs \cite{GAN}, we attempt to smooth chromatograms, without distortion of the true underlying quantifiable data. 
-\color{red}
-Highlight results here
-\color{black}
-}
+From our experiments we show promising results which are able to somewhat achieve the same shape as our input while not distorting the quantifiable data.
 
 \section{Introduction}
 DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins in a single sample. In order to analyze thousands of proteins at the same time, DIA requires a low sample rate. This results in the quality of the data extracted to be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
 
-The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DE_RAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM dataset with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
+The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DE_RAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM dataset with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data. Unfortunately our GAN model was not able to smooth the input. But it was able to somewhat learn a compression of the input space and output chromatograms with similar shape to the input without distorting quantifiable data.
 
-\color{red}
-Include results here
-\color{black}
+
 
 \begin{figure}
 \centering
@@ -98,8 +93,18 @@ The GAN takes the average chromatogram and the single transition chromatogram as
 \caption{Here we show the input and output data for the GAN network. The input composes of unique transition along with an average shape chromatogram coming from all other transitions in the peak group. The output is the smoothed peak group from the transition. (Note the above is not real input or output data as a result of training. It is only for demonstration)}
 \label{fig:test}
 \end{figure}
+\begin{figure}
+\includegraphics[scale=0.5]{TopoGenerator}
+\caption{Generator Structure}
+\end{figure}
+
+\begin{figure}
+\includegraphics[scale=0.5]{TopoDiscriminator}
+\caption{Discriminator Structure}
+\end{figure}
 
 \color{black}
+
 \section{Algorithm Definition}
 \subsection{Chromatogram Pre-processing}
 Before we can use the chromatogram data it has to be pre-processed. The time span of each peakgroup was not of equal length so all the chromatograms had to be up-sampled or down-sampled so that they were all a standard length of 100 intensity points per peak. As well the intensities were normalized to range from 0 to 1.   
@@ -118,6 +123,9 @@ To calculate this metric we simply integrate over the curve of each ion's chroma
 
 If after doing smoothing from GANS we see this score go significantly down from before smoothing, then we know that we are corrupting the data. But if it is close to 1, then we can feel confident that the GAN is smoothing the data correctly. 
 \section{Results}
+In the test set we achieved images that appeared to somewhat look like the original input. The data was also not corrupted. Both the original DIA data and the predicted data got approximately the same dot product scores of $\sim 0.98$. 
+
+
 \section{Discussion}
 \section{Individual Contributions}
 \subsection{Max Horowitz-Gelb}
@@ -141,6 +149,14 @@ If after doing smoothing from GANS we see this score go significantly down from 
 Work has been done in the past to smooth chromatograms, but as far as we know, never with a neural network. \cite{Smooth_data} used standard statistical and signal processing methods to smooth and give better quantification of peak areas in SRM data. \cite{gaussian_mixture} removed noise as well as overlapping peaks using a gaussian mixture model. Another model \cite{ASCENT} smoothed peaks by fitting them to a complicated piecewise function.
 \section{Future Work}
 \section{Conclusion}
+As we've shown, our GAN is able to somewhat understand the distribution of peak shapes. Though it was not able to smooth the input data it produced outputs from compressed information that somewhat resemble the shape of the input without distorting the quantifiable information. One of the main issues is that we did not have a noise model that was based in the physics of mass spectrometry. We just used a simple Gaussian process noise model. But the fact that we were able to somewhat recreate the original input is a good sign though. It suggests that the GAN network was able to somewhat do feature extraction and learned a generative model for all peaks. This could not only be useful for peak smoothing but also peak detection. The features learned in this model could be applied to a predictive task where we need to select out peaks from a long potentially hour long chromatogram. Though our model is not yet useable for peak smoothing on real data, it seems promising and with more work it could be a powerful tool for peak smoothing and potentially many other computational tasks involved in the field of mass spectrometry.
+\section{Test Predictions}
+\includegraphics[scale=0.5]{example1}
+\includegraphics[scale=0.5]{example2}
+\includegraphics[scale=0.5]{example3}
+\includegraphics[scale=0.5]{example4}
+\includegraphics[scale=0.5]{example5}
+\includegraphics[scale=0.5]{example6}
 
 \bibliography{writeup}{}
 \bibliographystyle{plain}
