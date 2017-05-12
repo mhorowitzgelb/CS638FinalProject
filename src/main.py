@@ -54,10 +54,10 @@ def samplenoise(image_width, num_imgs):
 
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
-    with open('data/smooth.pkl', 'rb') as smooth_file:
+    with open('../data/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
-    with open('data/ManualHannesDataset.pkl','rb') as noisy_file:
+    with open('../data/hannes.pkl','rb') as noisy_file:
         testing_dataset = pickle.load(noisy_file)
 
 
@@ -194,7 +194,7 @@ def main():
         dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
 
     # Loss
-    lb = 10.0
+    lb = 0.1
     dloss = tf.losses.softmax_cross_entropy(disc_output, dl6)
     dl_print = tf.Print(dloss, [dloss], message="dloss: ")
 
@@ -208,7 +208,7 @@ def main():
     dtrain = doptimizer.minimize(dloss)
     gtrain = goptimizer.minimize(gl_print)
 
-    num_epochs = 1
+    num_epochs = 3000
     save_loc = "log/gan_model{0}.ckpt"
 
     print("starting")
@@ -234,14 +234,15 @@ def main():
             sess.run(dtrain, feed_dict)
             sess.run(gtrain, feed_dict)
             train_writer.add_graph(sess.graph)
-            if (i+1) % 50 == 0:
+            if (i+1) % 100 == 0:
                 (summary,) = sess.run([merged],feed_dict)
                 train_writer.add_summary(summary,i)
-                print("saving at " + save_loc.format((i // 100) % 10))
-                saver.save(sess, save_loc.format((i // 100) % 10))
+                print("saving at " + save_loc.format(i))
+                saver.save(sess, save_loc.format(i))
             if i == num_epochs -1:
                 #Get predictions
                 predictions = layer7.eval(feed_dict={gen_input: batch, gen_noise: noise},session=sess)
+            print(i)
 
         #model = generator_model(layer7,gen_input,gen_noise)
 
@@ -252,14 +253,21 @@ def main():
 
         train_writer.flush()
         #plot first example
-        original = batch[0][:,0]
-        pred = predictions[0][:,0]
+        start = random.randint(0,100000)
         t= np.arange(100)
+        for i in range(len(batch)):
+            original = batch[i][:,0]
+            pred = predictions[i][:,0]
+            onenoise = noise[i][:,0]
 
-        plt.plot(t,original)
-        plt.show()
-        plt.plot(t,pred)
-        plt.show()
+            plt.clf()
+            plt.cla()
+            plt.plot(t, original, label="Original")
+            plt.plot(t, onenoise + original, label="Noisy")
+            plt.plot(t, pred, label="Predicted")
+            plt.savefig("log/result{0}.png".format(start + i))
+            plt.legend()
+            plt.show()
 
 class generator_model:
     def __init__(self, output, input, noise):

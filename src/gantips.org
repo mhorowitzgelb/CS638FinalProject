@@ -58,4 +58,7 @@
 ** Loss
 *** whether or not it was the right prediction.
 * Things to talk about in the paper
+** Unclear whether the adversarial component made that much difference
+*** TODO Test without the discriminator loss
+*** TODO 
 ** No pooling layers because the necessary information is local
