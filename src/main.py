@@ -54,10 +54,10 @@ def samplenoise(image_width, num_imgs):
 
 def main():
     tf.logging.set_verbosity(tf.logging.INFO)
-    with open('../data/smooth.pkl', 'rb') as smooth_file:
+    with open('data/smooth.pkl', 'rb') as smooth_file:
         training_dataset = pickle.load(smooth_file)
 
-    with open('../data/hannes.pkl','rb') as noisy_file:
+    with open('data/hannes.pkl','rb') as noisy_file:
         testing_dataset = pickle.load(noisy_file)
 
 
@@ -91,107 +91,106 @@ def main():
 
     batch_size = 16
 
-    with tf.name_scope('Generator') as scope:
-
-        # should be the non-noisy image
-        gen_input = tf.placeholder(tf.float32,
-                                   name="gen_input",
-                                   shape=[batch_size,
-                                          image_width,
-                                          number_of_channels])
-
-        # the noise
-        gen_noise = tf.placeholder(tf.float32,
-                                   name="gen_noise",
-                                   shape=[batch_size,
-                                          image_width,
-                                          number_of_channels])
-
-        just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
-        # this means that there will be 0 padding
-        padding = "SAME"
-
-        # Generator layers
-        #  convolution section
-        #   layer1
-        num_filters1 = 64
-        kernel_size1 = 8
-        stride1 = 2
-
-        layer1 = c1dwrap(gen_input + gen_noise, num_filters1, kernel_size1,
-                         stride1, padding, name="Conv1")
-
-        #   layer2
-        num_filters2 = 128
-        kernel_size2 = 4
-        stride2 = 2
-        layer2 = c1dwrap(layer1, num_filters2, kernel_size2, stride2, padding, name="Conv2")
-
-        #   layer3
-        num_filters3 = 256
-        kernel_size3 = 2
-        stride3 = 1
-        layer3 = c1dwrap(layer2, num_filters3, kernel_size3, stride3, padding, name="Conv3")
-
-        #  inv-convolution section
-
-        #   layer4
-        num_filters4 = 256
-        kernel_size4 = 2
-        stride4 = 1
-        layer4 = c1d_transpose_wrap(layer3, num_filters4, kernel_size4, stride4, padding, name="DeConv1")
-
-        #   layer5
-        num_filters5 = 128
-        kernel_size5 = 4
-        stride5 = 2
-        layer5 = c1d_transpose_wrap(layer4, num_filters5, kernel_size5, stride5, padding, name="DeConv2")
-
-        #   layer6
-        num_filters6 = 64
-        kernel_size6 = 8
-        stride6 = 2
-        layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding, name="DeConv3")
-
-        #   layer7
-        layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
-
-        arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
-                          [batch_size * 2, 2])
 
 
+    # should be the non-noisy image
+    gen_input = tf.placeholder(tf.float32,
+                               name="gen_input",
+                               shape=[batch_size,
+                                      image_width,
+                                      number_of_channels])
 
-        print(layer7, just_activation)
+    # the noise
+    gen_noise = tf.placeholder(tf.float32,
+                               name="gen_noise",
+                               shape=[batch_size,
+                                      image_width,
+                                      number_of_channels])
 
-    with tf.name_scope("Discriminator") as scope:
-        disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
-        disc_output = tf.constant(arst, tf.float32, name="disc_output")
+    just_activation = tf.slice(gen_input, [0, 0, 0], [-1, -1, 1])
+    # this means that there will be 0 padding
+    padding = "SAME"
 
-        # Discriminator
-        dnf1 = 512
-        dks1 = 8
-        ds1 = 2
-        dl1 = c1dwrap(disc_input, dnf1, dks1, ds1, padding, name="Conv1")
+    # Generator layers
+    #  convolution section
+    #   layer1
+    num_filters1 = 64
+    kernel_size1 = 8
+    stride1 = 2
 
-        dnf2 = 256
-        dks2 = 4
-        ds2 = 2
-        dl2 = c1dwrap(dl1, dnf2, dks2, ds2, padding, name="Conv2")
+    layer1 = c1dwrap(gen_input + gen_noise, num_filters1, kernel_size1,
+                     stride1, padding, name="Conv1")
 
-        dnf3 = 128
-        dks3 = 2
-        ds3 = 1
-        dl3 = c1dwrap(dl2, dnf3, dks3, ds3, padding, name="Conv3")
+    #   layer2
+    num_filters2 = 128
+    kernel_size2 = 4
+    stride2 = 2
+    layer2 = c1dwrap(layer1, num_filters2, kernel_size2, stride2, padding, name="Conv2")
 
-        dnf4 = 64
-        dks4 = 2
-        ds4 = 1
-        dl4 = c1dwrap(dl3, dnf4, dks4, ds4, padding, name="Conv4")
+    #   layer3
+    num_filters3 = 256
+    kernel_size3 = 2
+    stride3 = 1
+    layer3 = c1dwrap(layer2, num_filters3, kernel_size3, stride3, padding, name="Conv3")
 
-        shpe = dl4.get_shape()[1:]
-        flat = tf.reshape(dl4, [-1, shpe.num_elements()])
-        dl5 = tf.layers.dense(flat, units=256, activation=tf.sigmoid)
-        dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
+    #  inv-convolution section
+
+    #   layer4
+    num_filters4 = 256
+    kernel_size4 = 2
+    stride4 = 1
+    layer4 = c1d_transpose_wrap(layer3, num_filters4, kernel_size4, stride4, padding, name="DeConv1")
+
+    #   layer5
+    num_filters5 = 128
+    kernel_size5 = 4
+    stride5 = 2
+    layer5 = c1d_transpose_wrap(layer4, num_filters5, kernel_size5, stride5, padding, name="DeConv2")
+
+    #   layer6
+    num_filters6 = 64
+    kernel_size6 = 8
+    stride6 = 2
+    layer6 = c1d_transpose_wrap(layer5, num_filters6, kernel_size6, stride6, padding, name="DeConv3")
+
+    #   layer7
+    layer7 = tf.layers.dense(layer6, units=1, activation=tf.tanh)
+
+    arst = np.reshape(([1, 0] * batch_size) + ([0, 1] * batch_size),
+                      [batch_size * 2, 2])
+
+
+
+    print(layer7, just_activation)
+
+    disc_input = tf.concat([layer7, just_activation], 0, name="disc_input")
+    disc_output = tf.constant(arst, tf.float32, name="disc_output")
+
+    # Discriminator
+    dnf1 = 512
+    dks1 = 8
+    ds1 = 2
+    dl1 = c1dwrap(disc_input, dnf1, dks1, ds1, padding, name="Conv1")
+
+    dnf2 = 256
+    dks2 = 4
+    ds2 = 2
+    dl2 = c1dwrap(dl1, dnf2, dks2, ds2, padding, name="Conv2")
+
+    dnf3 = 128
+    dks3 = 2
+    ds3 = 1
+    dl3 = c1dwrap(dl2, dnf3, dks3, ds3, padding, name="Conv3")
+
+    dnf4 = 64
+    dks4 = 2
+    ds4 = 1
+    dl4 = c1dwrap(dl3, dnf4, dks4, ds4, padding, name="Conv4")
+
+    shpe = dl4.get_shape()[1:]
+    flat = tf.reshape(dl4, [-1, shpe.num_elements()])
+    dl5 = tf.layers.dense(flat, units=256, activation=tf.sigmoid)
+    dl6 = tf.layers.dense(dl5, units=2, activation=tf.sigmoid)
 
     # Loss
     lb = 0.1
@@ -227,7 +226,17 @@ def main():
         saver = tf.train.Saver()
         batch = [random.choice(training_set) for _ in range(batch_size)]
 
+        train_writer.add_graph(sess.graph)
+        saver.restore(sess,"./gan_model2999.ckpt")
+        model = generator_model(layer7, gen_input, gen_noise)
 
+        do_predictions(testing_dataset, sess, model, image_width)
+
+        print("Average dot products")
+        print(get_average_dot_product(testing_dataset))
+        with open("testPred.pkl",'wb') as predFile:
+            pickle.dump(testing_dataset,predFile)
+        sys.exit()
         for i in range(num_epochs):
             noise = samplenoise(image_width, batch_size)
             feed_dict = {gen_input: batch, gen_noise: noise}
@@ -244,12 +253,7 @@ def main():
                 predictions = layer7.eval(feed_dict={gen_input: batch, gen_noise: noise},session=sess)
             print(i)
 
-        #model = generator_model(layer7,gen_input,gen_noise)
 
-        #do_predictions(testing_dataset,sess,model,image_width)
-
-        #print("Average dot products")
-        #print(get_average_dot_product(testing_dataset))
 
         train_writer.flush()
         #plot first example
