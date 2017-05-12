@@ -58,7 +58,22 @@
 ** Loss
 *** whether or not it was the right prediction.
 * Things to talk about in the paper
-** Unclear whether the adversarial component made that much difference
-*** TODO Test without the discriminator loss
-*** TODO 
-** No pooling layers because the necessary information is local
+** TODO Architecture decisions
+*** TODO Used the advice given in the NIPS tutorial
+*** TODO Neither the discriminator nor the generator has any pooling type layer
+*** TODO Hyper parameter optimization was a problem, wanted to investigate alternet parameters but coudln't
+*** TODO Used batch normalization.
+*** TODO Wanted to use a perceptual loss function, but no supervised information for this data.
+** TODO Discriminator Architecture
+*** TODO a batch with 1/2 real (no noise) and 1/2 fake (from generator)
+*** TODO SGD was used to optimize, with a learning rate of 0.01
+** TODO Generator Architecture
+*** TODO noisy original was given as the inputs
+*** TODO ADAM with epsilon = 0.01 was used.
+*** TODO No pooling layers because the necessary information is local
+*** TODO The goal was to force the network to by having fewer parameters in the middle
+**** TODO Similar to an autoencoder
+**** TODO Idea inspired by *rain paper*
+** TODO Results discussion
+*** TODO Unclear whether the adversarial component made that much difference
+*** TODO Really needed a perceptual loss function to get the same level of success
