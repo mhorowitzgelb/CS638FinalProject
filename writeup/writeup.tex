@@ -25,9 +25,9 @@ Highlight results here
 }
 
 \section{Introduction}
-DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins. In order to analyze thousands of proteins at the same time, DIA methods require a low sample rate. This results in the quality of the data extracted to be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality to DIA. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
+DIA \cite{DIA} is a method of LC/MS for quanitifying thousands of proteins in a single sample. In order to analyze thousands of proteins at the same time, DIA requires a low sample rate. This results in the quality of the data extracted to be quite poor. An alternative to DIA is SRM, or Selected Reaction Monitoring,\cite{SRM}. SRM is not good for quantifying more than a handful of peptides at a time, but the data generated is of far superior quality. It would be nice if we could keep the high throughput of DIA while also having data with the same quality as SRM. Then one could analyze thousands of proteins at the same time and get clean reliable data for quantification.
 
-The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DE_RAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM data with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
+The quality of SRM data in comparison to DIA data suggests that perhaps a generative model trained on clean SRM data, could remove noise and smooth DIA data without distorting the actual quantifiable information. To test this hypothesis we chose to use a GAN as our generative model. GAN neural networks have been shown as powerful tools for image processing particularly for removal of noise and upscaling of images \cite{SRGAN}\cite{DE_RAIN}. We applied similar methods to chromatogram data by training a GAN on clean SRM dataset with simulated Gaussian noise. We then tested our GAN on a dataset of real DIA data.
 
 \color{red}
 Include results here
@@ -52,9 +52,9 @@ Include results here
 \end{figure}
 
 \section{Brief LC/MS Primer}
-LC/MS identifies and quantifies proteins by separating them by their hydrophobicity and mass. In general it is difficult to quantify whole proteins so we instead use peptides which are sub-sequences of a protein. These peptides come off of a liquid column at a specific time which is dependent on the hydrophobicity of the peptide.This time is known as the peptide's Retention Time. Once the peptide comes off the column it is ionized and then becomes what is called a precursor ion. When precursor ions go into the mass spectrometer they are filtered by the ratio of their mass to charge. A precursor ion's mass to charge along with its retention time are used as a two fold filtration process for unique quantification of peptides. 
+LC/MS identifies and quantifies proteins by separating them by their hydrophobicity and mass. In general it is difficult to quantify whole proteins so we instead use peptides, which are sub-sequences of a protein. These peptides come off of a liquid column at a specific time which is dependent on the hydrophobicity of the peptide. This time is known as the peptide's Retention Time. Once the peptide comes off the column it is ionized and then becomes what is called a precursor ion. When precursor ions go into the mass spectrometer they are filtered by the ratio of their mass to charge. A precursor ion's mass to charge along with its retention time are used as a two fold filtration process for unique identification and quantification of peptides. 
 
-At this point one could start quantifying the peptide, but in certain methods, like DIA, the precursor is then blasted it with an ion spray. This ion spray causes the precursor to fragment into two pieces. One of these pieces, known as a transition ion, becomes charged and may be detected by the machine. The ratio of expected number of transition ions for each possible fragment that could occur is known via empirical evidence. Because of this the relative ion intensity of each transition ion is useful for identification of the peptide.
+At this point one could start quantifying the peptide, but in certain methods, like DIA, the precursor is then blasted it with an ion spray. This ion spray causes the precursor to fragment into two pieces. One of these pieces, known as a transition ion, becomes charged and may be detected by the machine. The fraction of the time the machine detects any possible fragment is relatively stable and known from empirical data. Because of this the relative ion intensity of each transition ion is useful for identification of the peptide. The relative intensity of each ion can be thought of as a unique key for a peptide.
 
 \begin{figure}
 \centering
@@ -77,7 +77,7 @@ At this point one could start quantifying the peptide, but in certain methods, l
 
 \section{Task Definition}
 The goal of this project is to train a GAN so that it can take a peak group and return the same peak group after being smoothed and denoised.  
-The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions coming from the same peak group.  The reason this is done is that as one can see from figure 2, each transition chromatogram has a similar shape to all the other chromatograms in the peak group. So having an average of the other chromatograms is a clue into the true shape of the transition chromatogram we are trying to smooth. 
+The GAN smooths and denoises each transition separately. The network takes as input the chromatogram from a single transition as well as an average signal from all the other transitions coming from the same peak group.  The reason this is done is that, as one can see from figure 2b, each transition chromatogram has a similar shape to all the other chromatograms in the same peak group. So having an average of the other chromatograms is a clue into the true shape of the transition chromatogram we are trying to smooth. 
 
 The GAN takes the average chromatogram and the single transition chromatogram as input and then outputs a chromatogram of the single transition after it has been smoothed. 
 
@@ -104,7 +104,7 @@ Gabe describe structure of the Gans net.
 \color{black}
 \section{Algorithm Definition}
 \subsection{Chromatogram Pre-processing}
-Before we can use the chromatogram data it has to be pre-processed. The time span of each peakgroup is not of equal length so all the chromatograms had to be up-sampled or down-sampled so that they were all a standard length of 100 intensity points per peak. As well the intensities were normalized to range from 0 to 1.   
+Before we can use the chromatogram data it has to be pre-processed. The time span of each peakgroup was not of equal length so all the chromatograms had to be up-sampled or down-sampled so that they were all a standard length of 100 intensity points per peak. As well the intensities were normalized to range from 0 to 1.   
 \subsection{GAN}
 \color{red}
 Gabe explain GANs.
@@ -112,9 +112,9 @@ Gabe explain GANs.
 \section{Methodology}
 For training we used a high qualitiy SRM dataset\cite{Smooth_data} containing approximately 12,000 unique transition chromatograms. For our testing, we used DIA dataset \cite{TRIC} of 16 samples each containing 500 peakgroups.
 
-For the test data, we only had the noisy raw DIA data. We don't know what the true shape of the peaks should look like once the noise was removed. For a single peak group the only way to know if we correctly smoothed the data without distorting it would be if we knew beforehand the true amount of protein that existed in each sample. Unfortunately we did not know that for the sample we were using. 
+For the test data, we only had the noisy raw DIA data. We don't know what the true shape of the peaks should look like once the noise was removed. For a single peak group the only way to know if we correctly smoothed the data without distorting it would be if we knew beforehand the true amount of protein that existed in the sample. Unfortunately we did not know that for the samples we were using so we had to use a different metric. 
 
-So instead we used relative ion intensity to measure the quality of our data. As mentioned earlier in the primer, the relative intensity of each fragment ion has a fairly stable value which we can use for identification. In the test set we have 16 different samples all containing the same peptides. If after smoothing the test data we found that the relative ion intensties for the same peptide across samples didn't match, then we would know that we had corrupted the data. 
+Instead we used relative ion intensity to measure the quality of our data. As mentioned earlier in the primer, the relative intensity of each fragment ion has a fairly stable value which we can use for identification. In the test set we have 16 different samples all containing the same peptides. If after smoothing the test data we found that the relative ion intensties for the same peptide across samples didn't match, then we would know that we had corrupted the data. 
 
 To calculate this metric we simply integrate over the curve of each ion's chromatogram in the same peak group. Combing these integrations gives a vector of chromatogram areas for each peptide in each sample. Then with these vectors we simply calculate the average cosine angle between all different samples for the same peptide. This average is our score, where 1 is the best and -1 is the worst.
 
